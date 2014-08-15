@@ -4,12 +4,12 @@
 Modulo: Script Indexador
 Descripción: Indexar los posts, con TAGs.
 Entrada: f=# Donde # es el numero de foro de SMF
-	 t=# Donde # es 1:(COM) o 2:(PED) [t  es un parámetro opcional, por defecto 1:(COM)]
+	 p Parámetro para buscar (PED) en vez de (COM) [p es un parámetro opcional]
 	 l=* Donde * es una letra [l es un parámetro opcional]
-	 a= lista por año [a es un parámetro opcional]
+	 a lista incluyendo el año antes del nombre [a es un parámetro opcional]
 Ejemplo:
-	 http://www.tuweb.com.ar/indexar.php?f=5&t=1&l=d&a
-	 $ php indexar.php --f=5 --t=1 --l=d -a
+	 http://www.tuweb.com.ar/indexar.php?f=5&l=d&a
+	 $ php indexar.php --f=5 --l=d -a
 
 Autor: snoop852@gmail.com ( para argentop2p.net -ex argentop2p.com.ar-)
 Fecha: 08/12/05 -
@@ -33,6 +33,8 @@ Fecha: 08/12/05 -
 14-08-14 - Arreglo en función recupera_anio
 	   Cambio en mensajes de alerta y salida
 	   Arreglo en analisis del parámetro "t" por defecto (COM)
+15-08-14 - Se quita parámetro t, se agrega el opcional p, se busca (COM) por defecto
+	   Arreglos en proceso de parámetros f/a (DAX)
 
 -----------------------------------------------------
 Por favor, no cambiar los copyleft correspondientes.
@@ -42,7 +44,7 @@ http://www.gnu.org/licenses/gpl.txt
 */
 
 $seg1 = microtime(true);
-$version = "1.4b final.";
+$version = "1.4c beta 1.";
 
 // Nombre del archivo de salida
 // Se complementa con el numero del foro y luego .html
@@ -60,7 +62,6 @@ $diasNuevo = "7";
 
 // Evita advertencias de PHP
 $letra = "";
-$intBusca = "";
 
 // Variables de la DB
 // $db_server,  $db_user,  $db_passwd, $db_name
@@ -175,35 +176,20 @@ if ($argv){
  }
 }
 
-// Evaluo y proceso el parámetro "t"
-if (isset($_GET["t"])){
- if (is_numeric($_GET["t"])){
-  $intBusca = intval($_GET["t"]);
- }
+// Evaluo y proceso el parámetro "p"
+if (isset($_GET["p"]) || isset($_ARG["p"])) {
+ $cadenaBusca = "(PED)";
 }
-elseif (isset($_ARG["t"])){
- if (is_numeric($_ARG["t"])){
-  $intBusca = intval($_ARG["t"]);
- }
-}
-switch ($intBusca){
-case 1 : $cadenaBusca = "(COM)";
-break;
-case 2 : $cadenaBusca = "(PED)";
-break;
-default : $cadenaBusca = "(COM)";
+else {
+ $cadenaBusca = "(COM)";
 }
 
 // Evaluo si se suministró el parámetro "f"
-if (isset($_GET["f"])){
- if (is_numeric($_GET["f"])){
-  $foro = intval($_GET["f"]);
- }
+if( isset( $_GET["f"] ) && is_numeric( $_GET["f"] ) ) {
+ $foro = intval($_GET["f"]);
 }
-elseif (isset($_ARG["f"])){
- if (is_numeric($_ARG["f"])){
-  $foro = intval($_ARG["f"]);
- }
+elseif ( isset( $_ARG["f"] ) && is_numeric( $_ARG["f"] ) ) {
+ $foro = intval($_ARG["f"]);
 }
 else {
  exit("No se suministró el parámetro f.");
@@ -371,12 +357,9 @@ foreach ($index as $data){
  }
  // Escribir el enlace
  $data['titulo'] = add_HD($data['titulo']);
- $anio = recupera_anio($data['titulo']);
  // Parsing del parametro "a" para generar lista con año al inicio
- if (isset($_GET["a"])){
-  $oneline .= "(". $anio['anio'] .") <a href=http://www.argentop2p.net/index.php?topic=". $data['topicId'] ." target=_blank>". $anio['linea'] ."</a><em> - (". $data['usuario'] .")</em><br>";
- }
- elseif (isset($_ARG["a"])){
+ if (isset($_GET["a"]) || isset($_ARG["a"])) {
+  $anio = recupera_anio($data['titulo']);
   $oneline .= "(". $anio['anio'] .") <a href=http://www.argentop2p.net/index.php?topic=". $data['topicId'] ." target=_blank>". $anio['linea'] ."</a><em> - (". $data['usuario'] .")</em><br>";
  }
  else {
